@@ -1,0 +1,10 @@
+linters:
+  enable:
+    - gofumpt
+
+linters-settings:
+  gofumpt:
+    extra-rules: true
+
+issues:
+  exclude-use-default: false
