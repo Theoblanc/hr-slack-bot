@@ -1,8 +1,10 @@
 package attendance
 
+import "time"
+
 type Repository interface {
-	Create(attendance *Attendance) error
-	GetByID(id uint) (*Attendance, error)
-	Update(attendance *Attendance) error
-	Delete(id uint) error
+	Save(*Attendance) error
+	FindByID(id uint) (*Attendance, error)
+	FindTodayAttendance(employeeID uint) (*Attendance, error)
+	FindByDateRange(employeeID uint, start, end time.Time) ([]Attendance, error)
 }

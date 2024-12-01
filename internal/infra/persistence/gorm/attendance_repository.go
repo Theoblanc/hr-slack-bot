@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/TheoBlanc/AttendEase/internal/domain/attendance"
 	"gorm.io/gorm"
 )
@@ -13,23 +15,42 @@ func NewAttendanceRepository(db *gorm.DB) attendance.Repository {
 	return &AttendanceRepository{db: db}
 }
 
-func (r *AttendanceRepository) Create(attendance *attendance.Attendance) error {
-	return r.db.Create(attendance).Error
+func (r *AttendanceRepository) Save(a *attendance.Attendance) error {
+	return r.db.Save(a).Error
 }
 
-func (r *AttendanceRepository) GetByID(id uint) (*attendance.Attendance, error) {
-	var a attendance.Attendance
-	err := r.db.First(&a, id).Error
-	if err != nil {
-		return nil, err
+func (r *AttendanceRepository) FindByID(id uint) (*attendance.Attendance, error) {
+	var att attendance.Attendance
+	result := r.db.First(&att, id)
+	if result.Error != nil {
+		return nil, result.Error
 	}
-	return &a, nil
+	return &att, nil
 }
 
-func (r *AttendanceRepository) Update(attendance *attendance.Attendance) error {
-	return r.db.Save(attendance).Error
+func (r *AttendanceRepository) FindTodayAttendance(employeeID uint) (*attendance.Attendance, error) {
+	var att attendance.Attendance
+	today := time.Now().Format("2006-01-02")
+
+	result := r.db.Where("employee_id = ? AND DATE(created_at) = ?", employeeID, today).
+		First(&att)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &att, nil
 }
 
-func (r *AttendanceRepository) Delete(id uint) error {
-	return r.db.Delete(&attendance.Attendance{}, id).Error
+func (r *AttendanceRepository) FindByDateRange(employeeID uint, start, end time.Time) ([]attendance.Attendance, error) {
+	var attendances []attendance.Attendance
+
+	result := r.db.Where("employee_id = ? AND created_at BETWEEN ? AND ?",
+		employeeID, start, end).
+		Order("created_at DESC").
+		Find(&attendances)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return attendances, nil
 }
